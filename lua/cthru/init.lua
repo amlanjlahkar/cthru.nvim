@@ -14,6 +14,14 @@ local M = {}
 ---@param opts CThruOpts
 M.setup = function(opts)
     assert(type(opts) == "table", "cthru: Pass an empty table if no options are to be provided")
+
+    for key, _ in pairs(opts) do
+        assert(
+            vim.tbl_contains({ "additional_groups", "cache_path", "excluded_groups" }, key),
+            string.format("cthru: invalid key(%s) received inside setup call", key)
+        )
+    end
+
     vim.validate({
         additional_groups = { opts["additional_groups"], { "table", "nil" } },
         excluded_groups = { opts["excluded_groups"], { "table", "nil" } },
