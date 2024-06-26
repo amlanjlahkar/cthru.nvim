@@ -14,6 +14,8 @@ local M = {}
 ---Setup method for cthru
 ---@param opts CThruOpts
 M.setup = function(opts)
+    assert(vim.fn.has("nvim-0.10.0") == 1, "cthru: minimum neovim version 0.10.0 required!")
+
     assert(type(opts) == "table", "cthru: Pass an empty table if no options are to be provided")
 
     for key, _ in pairs(opts) do
