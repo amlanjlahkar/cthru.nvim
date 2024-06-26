@@ -99,9 +99,10 @@ M.cthru = function(cache_path, hl_groups)
 
     for hlg, val in pairs(hl_map) do
         if vim.g._cthru then
-            if val.use then set_hl(0, hlg, { fg = val.fg, bg = "NONE", ctermbg = "NONE" }) end
+            local hl_opt = vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, val.hl_opt)
+            if val.use then set_hl(0, hlg, hl_opt) end
         else
-            set_hl(0, hlg, { fg = val.fg, bg = val.bg })
+            set_hl(0, hlg, val.hl_opt)
         end
     end
 end

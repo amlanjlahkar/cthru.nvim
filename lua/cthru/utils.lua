@@ -6,7 +6,8 @@ local utils = {}
 ---@param hl_group string
 ---@return table
 function utils.gen_hlmap_val(hl_group)
-    return vim.tbl_extend("error", api.nvim_get_hl(0, { name = hl_group, create = false }), { use = false })
+    local hl_opt = api.nvim_get_hl(0, { name = hl_group, create = false })
+    return { hl_opt = hl_opt, use = false }
 end
 
 ---Generate new highlight mapping based off of `hl_groups`
@@ -46,7 +47,7 @@ function utils.cmp_hlmap(hl_groups, hl_map_cached)
         if not hl_map_cached[hlg] then
             local value = utils.gen_hlmap_val(hlg)
             hl_map_cached[hlg] = value
-            hl_map[hlg] = vim.deepcopy(value)
+            hl_map[hlg] = vim.deepcopy(value, true)
             if not update_cache then update_cache = true end
         end
         hl_map[hlg].use = true
