@@ -45,7 +45,7 @@ M.register_usrcmd = function(opts)
         cache_path = opts.cache_path or cache_path
     end
 
-    local usercmd_name = "CThru"
+    local usercmd_name = "CthruToggle"
 
     assert(vim.fn.exists(":" .. usercmd_name) ~= 2)
     api.nvim_create_user_command(usercmd_name, function()
