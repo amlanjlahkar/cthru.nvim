@@ -7,8 +7,9 @@ local utils = require("cthru.utils")
 local M = {}
 
 ---@class CThruOpts
----@field cache_path string? A custom location for storing cache
----@field additional_groups table? Additional groups to be managed by cthru
+---@field additional_groups table? Additional highlight groups to be included
+---@field cache_path string? Cache location
+---@field excluded_groups table? Highlight groups to be excluded from default list
 
 ---Setup method for cthru
 ---@param opts CThruOpts
@@ -24,8 +25,8 @@ M.setup = function(opts)
 
     vim.validate({
         additional_groups = { opts["additional_groups"], { "table", "nil" } },
-        excluded_groups = { opts["excluded_groups"], { "table", "nil" } },
         cache_path = { opts["cache_path"], { "string", "nil" } },
+        excluded_groups = { opts["excluded_groups"], { "table", "nil" } },
     })
 
     vim.g._cthru = false
