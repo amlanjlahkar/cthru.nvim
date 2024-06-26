@@ -1,5 +1,7 @@
 Cthru exposes a global `:CthruToggle` user command which can be used to toggle the background color property of [certain](lua/cthru/defaults.lua#L3-L18) highlight groups.
 
+![demo](assets/cthru_demo.gif)
+
 ---
 
 ## Installation and usage
