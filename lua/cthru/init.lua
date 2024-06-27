@@ -16,20 +16,31 @@ local M = {}
 M.setup = function(opts)
     assert(vim.fn.has("nvim-0.10.0") == 1, "cthru: minimum neovim version 0.10.0 required!")
 
-    assert(type(opts) == "table", "cthru: Pass an empty table if no options are to be provided")
+    opts = opts or {}
 
-    for key, _ in pairs(opts) do
-        assert(
-            vim.tbl_contains({ "additional_groups", "cache_path", "excluded_groups" }, key),
-            string.format("cthru: invalid key(%s) received inside setup call", key)
-        )
+    if opts then
+        local valid_arg_types = {
+            additional_groups = "table",
+            cache_path = "string",
+            excluded_groups = "table",
+        }
+
+        local arg_enum = vim.iter(valid_arg_types):enumerate()
+
+        for key, value in pairs(opts) do
+            -- stylua: ignore
+            assert(arg_enum:any(function(_, arg) return key == arg end), "cthru: invalid key received inside setup call: " .. key)
+            vim.validate({
+                [key] = {
+                    value,
+                    function(v)
+                        return vim.list_contains({ valid_arg_types[key], "nil" }, type(v))
+                    end,
+                    valid_arg_types[key],
+                },
+            })
+        end
     end
-
-    vim.validate({
-        additional_groups = { opts["additional_groups"], { "table", "nil" } },
-        cache_path = { opts["cache_path"], { "string", "nil" } },
-        excluded_groups = { opts["excluded_groups"], { "table", "nil" } },
-    })
 
     vim.g._cthru = false
     vim.g._cthru_cache = {}
