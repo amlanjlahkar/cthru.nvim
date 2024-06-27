@@ -7,7 +7,7 @@ local M = {}
 
 ---Gateway method for external configuration
 ---@param opts CThruOpts
-M.setup = function(opts)
+M.configure = function(opts)
     assert(vim.fn.has("nvim-0.10.0") == 1, "cthru: minimum neovim version 0.10.0 required!")
 
     opts = opts or {}
