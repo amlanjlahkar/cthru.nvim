@@ -14,6 +14,8 @@ return {
         "StatusLine",
         "StatusLineNC",
         "TabLine",
+        "TabLineFill",
+        "TabLineSel",
         "WinBar",
         "WinBarNC",
     },
