@@ -24,21 +24,9 @@ M.setup = function(opts)
             cache_path = "string",
             excluded_groups = "table",
         }
-
-        local arg_enum = vim.iter(valid_arg_types):enumerate()
-
         for key, value in pairs(opts) do
-            -- stylua: ignore
-            assert(arg_enum:any(function(_, arg) return key == arg end), "cthru: invalid key received inside setup call: " .. key)
-            vim.validate({
-                [key] = {
-                    value,
-                    function(v)
-                        return vim.list_contains({ valid_arg_types[key], "nil" }, type(v))
-                    end,
-                    valid_arg_types[key],
-                },
-            })
+            assert(valid_arg_types[key], "cthru: invalid key received inside setup call: " .. key)
+            vim.validate({ [key] = { value, { valid_arg_types[key] }, true } })
         end
     end
 
@@ -133,7 +121,6 @@ M.cthru = function(cache_path, hl_groups)
             utils.overwrite_cache(cache_path, vim.json.encode(hl_map))
         end)
     end
-
 end
 
 return M
