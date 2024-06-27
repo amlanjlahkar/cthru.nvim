@@ -55,29 +55,29 @@ M.register_usrcmd = function(opts)
 
     local cache_path = defaults.cache_path
     local hl_groups_iter = vim.iter(defaults.hl_groups)
+    local hl_groups = hl_groups_iter:totable()
 
     if opts then
         local exclude = opts["excluded_groups"]
         if exclude then
             hl_groups_iter:map(function(hlg)
-                return not vim.tbl_contains(exclude, hlg) and hlg or nil
+                return not vim.list_contains(exclude, hlg) and hlg or nil
             end)
         end
-        vim.list_extend(hl_groups_iter:totable(), opts["additional_groups"] or {})
+        vim.list_extend(hl_groups, opts["additional_groups"] or {})
         cache_path = opts.cache_path or cache_path
     end
 
-    local usercmd_name = "CthruToggle"
+    local usercmd_name = defaults.usrcmd
 
     assert(vim.fn.exists(":" .. usercmd_name) ~= 2)
     api.nvim_create_user_command(usercmd_name, function()
-        M.cthru(cache_path, hl_groups_iter:totable())
+        M.cthru(cache_path, hl_groups)
     end, {
         nargs = 0,
         bar = false,
         bang = false,
-        desc = "Toggle background color for certain highlight groups \
-                to get a 'C-Thru' effect",
+        desc = "Toggle background color of highlight groups",
     })
 end
 
@@ -87,39 +87,38 @@ end
 M.cthru = function(cache_path, hl_groups)
     assert(type(hl_groups) == "table")
 
+    local hl_map = {}
+    local update_cache = false
+
     ---@diagnostic disable-next-line: undefined-field
     if not uv.fs_access(cache_path, "R") then
-        local hl_map = utils.gen_new_hlmap(hl_groups)
-        utils.overwrite_cache(cache_path, vim.json.encode(hl_map))
+        hl_map = utils.gen_new_hlmap(hl_groups)
+        update_cache = true
     end
-
-    local hl_map_cached = {}
 
     if not next(vim.g._cthru_cache) then
-        local file = assert(io.open(cache_path))
-        if not file then return end
+        if next(hl_map) then
+            vim.g._cthru_cache = hl_map
+        else
+            local file = assert(io.open(cache_path))
+            if not file then return end
 
-        local cached_data = file:read("*l")
-        hl_map_cached = vim.json.decode(cached_data)
-        vim.g._cthru_cache = hl_map_cached
+            local cached_data = file:read("*l")
+            hl_map = vim.json.decode(cached_data)
+            vim.g._cthru_cache = hl_map
 
-        file:close()
+            file:close()
+        end
     else
-        hl_map_cached = vim.g._cthru_cache
+        hl_map = vim.g._cthru_cache
     end
 
-    local update_cache, hl_map = utils.cmp_hlmap(hl_groups, hl_map_cached)
-
-    if update_cache then
-        vim.schedule(function()
-            utils.overwrite_cache(cache_path, vim.json.encode(hl_map_cached))
-        end)
-        vim.g._cthru_cache = hl_map_cached
-    end
+    local hl_map_copy = {}
+    update_cache, hl_map_copy = utils.cmp_hlmap(hl_groups, hl_map)
 
     vim.g._cthru = not vim.g._cthru
 
-    for hlg, val in pairs(hl_map) do
+    for hlg, val in pairs(hl_map_copy) do
         if vim.g._cthru then
             local hl_opt = vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, val.hl_opt)
             if val.use then set_hl(0, hlg, hl_opt) end
@@ -127,6 +126,14 @@ M.cthru = function(cache_path, hl_groups)
             set_hl(0, hlg, val.hl_opt)
         end
     end
+
+    if update_cache then
+        vim.g._cthru_cache = hl_map
+        vim.schedule(function()
+            utils.overwrite_cache(cache_path, vim.json.encode(hl_map))
+        end)
+    end
+
 end
 
 return M

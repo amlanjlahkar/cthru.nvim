@@ -1,4 +1,5 @@
 return {
+    usrcmd = "CthruToggle",
     cache_path = vim.fn.stdpath("data") .. "/cthru_cache.json",
     hl_groups = {
         "CursorLine",
