@@ -1,3 +1,6 @@
+local defaults = require("cthru.defaults")
+local usercmd_name = defaults.usrcmd
+
 local M = {}
 
 ---@class CThruOpts
@@ -8,14 +11,11 @@ local M = {}
 ---Gateway method for external configuration
 ---@param opts CThruOpts
 M.configure = function(opts)
-    assert(vim.fn.has("nvim-0.10.0") == 1, "cthru: minimum neovim version 0.10.0 required!")
-
     opts = opts or {}
 
     if opts then
         local valid_arg_types = {
             additional_groups = "table",
-            cache_path = "string",
             excluded_groups = "table",
         }
         for key, value in pairs(opts) do
@@ -24,8 +24,8 @@ M.configure = function(opts)
         end
     end
 
-    vim.g._cthru = false
-    vim.g._cthru_cache = {}
+    -- Delete usercommand set by default upon calling configure
+    pcall(vim.api.nvim_del_user_command, usercmd_name)
 
     M.register_usrcmd(opts)
 end
@@ -33,9 +33,6 @@ end
 ---Register user command
 ---@param opts table
 M.register_usrcmd = function(opts)
-    local defaults = require("cthru.defaults")
-
-    local cache_path = defaults.cache_path
     local hl_groups_iter = vim.iter(defaults.hl_groups)
     local hl_groups = hl_groups_iter:totable()
 
@@ -47,14 +44,16 @@ M.register_usrcmd = function(opts)
             end)
         end
         vim.list_extend(hl_groups, opts["additional_groups"] or {})
-        cache_path = opts.cache_path or cache_path
+        vim.g.cthru_groups = hl_groups
     end
-
-    local usercmd_name = defaults.usrcmd
 
     assert(vim.fn.exists(":" .. usercmd_name) ~= 2)
     vim.api.nvim_create_user_command(usercmd_name, function()
-        require("cthru.utils.cthru").init_cthru(cache_path, hl_groups)
+        require("cthru.utils.cthru").init_cthru({
+            hl_groups = vim.g.cthru_groups,
+            force_update = false,
+            toggle = true,
+        })
     end, {
         nargs = 0,
         bar = false,

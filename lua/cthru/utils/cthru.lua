@@ -3,41 +3,38 @@ local utils = require("cthru.utils")
 
 local M = {}
 
----@param cache_path string
----@param hl_groups table
-M.init_cthru = function(cache_path, hl_groups)
-    assert(type(hl_groups) == "table")
+---@class CthruInitOpts
+---@field hl_groups table
+---@field force_update boolean
+---@field toggle boolean
 
-    local hl_map = {}
-    local update_cache = false
+---@param opts CthruInitOpts
+M.init_cthru = function(opts)
+    assert(type(opts.hl_groups) == "table")
+
+    local cache_path = require("cthru.defaults").cache_path
+
+    local hl = {}
+    local write_cache = false
 
     ---@diagnostic disable-next-line: undefined-field
-    if not vim.uv.fs_access(cache_path, "R") then
-        hl_map = utils.gen_new_hlmap(hl_groups)
-        update_cache = true
+    if not vim.uv.fs_access(cache_path, "R") or opts.force_update then
+        hl = utils.gen_new_hl_cache(opts.hl_groups)
+        write_cache = true
     end
 
-    if not next(vim.g._cthru_cache) then
-        if next(hl_map) then
-            vim.g._cthru_cache = hl_map
-        else
-            local file = assert(io.open(cache_path))
-            if not file then return end
-
-            local cached_data = file:read("*l")
-            hl_map = vim.json.decode(cached_data)
-            vim.g._cthru_cache = hl_map
-
+    if not opts.force_update and vim.tbl_isempty(hl) then
+        local file = assert(io.open(cache_path))
+        if file then
+            local data = file:read("*l")
+            hl = vim.json.decode(data)
             file:close()
         end
-    else
-        hl_map = vim.g._cthru_cache
     end
 
-    local hl_map_copy = {}
-    update_cache, hl_map_copy = utils.cmp_hlmap(hl_groups, hl_map)
+    local update_cache, hl_map_copy = utils.cmp_hlmap(opts.hl_groups, hl.hl_map, opts.force_update)
 
-    vim.g._cthru = not vim.g._cthru
+    if opts.toggle then vim.g._cthru = not vim.g._cthru end
 
     for hlg, val in pairs(hl_map_copy) do
         if vim.g._cthru then
@@ -48,10 +45,9 @@ M.init_cthru = function(cache_path, hl_groups)
         end
     end
 
-    if update_cache then
-        vim.g._cthru_cache = hl_map
+    if write_cache or update_cache or opts.force_update then
         vim.schedule(function()
-            utils.overwrite_cache(cache_path, vim.json.encode(hl_map))
+            utils.overwrite_cache(cache_path, vim.json.encode(hl))
         end)
     end
 end

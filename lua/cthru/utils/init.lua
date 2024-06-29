@@ -1,4 +1,5 @@
 local api = vim.api
+local uv = vim.uv
 
 local utils = {}
 
@@ -13,13 +14,34 @@ end
 ---Generate new highlight mapping based off of `hl_groups`
 ---@param hl_groups table
 ---@return table
-utils.gen_new_hlmap = function(hl_groups)
+utils.gen_new_hl_cache = function(hl_groups)
     local hl_map = {}
     for _, hlg in pairs(hl_groups) do
         local value = utils.gen_hlmap_val(hlg)
         hl_map[hlg] = value
     end
-    return hl_map
+    return { colorscheme = vim.g.colors_name, hl_map = hl_map }
+end
+
+---Compare current colorscheme with cached colorscheme
+---@param cache_path string
+---@return boolean #`true` if same, `false` otherwise
+utils.cmp_hl_color = function(cache_path)
+    assert(type(cache_path) == "string")
+
+    ---@diagnostic disable-next-line: undefined-field
+    if not uv.fs_access(cache_path, "R") then return true end
+
+    local file = assert(io.open(cache_path))
+
+    if file then
+        local data = file:read("*l")
+        local hl = vim.json.decode(data)
+        file:close()
+        return hl.colorscheme == vim.g.colors_name
+    end
+
+    return true
 end
 
 ---Overwrite cthru cache
@@ -36,15 +58,18 @@ end
 ---Compare highlight groups with cached groups
 ---@param hl_groups table
 ---@param hl_map_cached table
----@return boolean update_cache
+---@param redefine? boolean Force redefine groups, default is `false`
+---@return boolean #Always `true` if `redefine` is `true`
 ---@return table #A modified copy of `hl_map_cached`
-utils.cmp_hlmap = function(hl_groups, hl_map_cached)
-    local update_cache = false
+utils.cmp_hlmap = function(hl_groups, hl_map_cached, redefine)
+    redefine = redefine or false
+
+    local update_cache = redefine or false
 
     local hl_map = vim.deepcopy(hl_map_cached, true)
 
     for _, hlg in pairs(hl_groups) do
-        if not hl_map_cached[hlg] then
+        if not hl_map_cached[hlg] or redefine then
             local value = utils.gen_hlmap_val(hlg)
             hl_map_cached[hlg] = value
             hl_map[hlg] = vim.deepcopy(value, true)
