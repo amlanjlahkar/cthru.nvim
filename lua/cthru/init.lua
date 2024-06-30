@@ -59,7 +59,6 @@ M.register_usrcmd = function(opts)
     vim.defer_fn(function()
         local color_same = require("cthru.utils").cmp_hl_color(defaults.cache_path)
         if not color_same then
-            print("writing cache...")
             local hl = utils.gen_new_hl_cache(g.cthru_groups)
             utils.overwrite_cache(defaults.cache_path, vim.json.encode(hl))
         end
@@ -68,7 +67,7 @@ M.register_usrcmd = function(opts)
     end, g.cthru_defer_count or 500)
 
     vim.api.nvim_create_user_command(usercmd_name, function()
-        require("cthru.utils.cthru").update_cthru({ toggle = true })
+        require("cthru.utils.cthru").hook_cthru({ force_update = g._cthru_changed, toggle = true })
     end, {
         nargs = 0,
         bar = false,

@@ -9,7 +9,7 @@ local M = {}
 ---@field toggle boolean #Toggle cthru state
 
 ---@param opts CthruInitOpts
-M.update_cthru = function(opts)
+M.hook_cthru = function(opts)
     assert(type(opts.toggle) == "boolean")
 
     local force_update = opts.force_update or false
@@ -40,14 +40,19 @@ M.update_cthru = function(opts)
 
     for hlg, val in pairs(hl_map_copy) do
         if g._cthru then
-            local hl_opt = vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, val.hl_opt)
-            if val.use then set_hl(0, hlg, hl_opt) end
+            if next(val.hl_opt) then
+                local hl_opt = vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, val.hl_opt)
+                if val.use then set_hl(0, hlg, hl_opt) end
+            end
         else
-            set_hl(0, hlg, val.hl_opt)
+            if next(val.hl_opt) then
+                set_hl(0, hlg, val.hl_opt)
+            end
         end
     end
 
     if write_cache or force_update then
+        if force_update then g._cthru_changed = false end
         vim.schedule(function()
             utils.overwrite_cache(cache_path, vim.json.encode(hl))
         end)

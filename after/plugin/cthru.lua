@@ -4,6 +4,7 @@ local g = vim.g
 local defaults = require("cthru.defaults")
 
 g._cthru = false
+g._cthru_changed = false
 g.cthru_groups = g.cthru_groups or defaults.hl_groups
 g.cthru_defer_count = g.cthru_defer_count or 300
 
@@ -25,18 +26,18 @@ vim.api.nvim_create_autocmd("ColorScheme", {
     desc = "Maintain cthru state on changing colorschemes",
     group = augroup,
     callback = function(opts)
-        local color_changed = g._cthru_color ~= nil and g._cthru_color ~= g.colors_name
-        if color_changed then g._cthru_color = g.colors_name end
+        g._cthru_changed = g._cthru_color ~= nil and g._cthru_color ~= g.colors_name
+        if g._cthru_changed then g._cthru_color = g.colors_name end
 
         -- Always called when cthru is enabled to reflect changes on the same colorscheme
-        if color_changed or g._cthru then
+        if g._cthru then
             --[[
                 Defer calling method to ensure custom highlights
                 for default colorscheme are properly applied
             --]]
             vim.defer_fn(function()
-                require("cthru.utils.cthru").update_cthru({
-                    force_update = color_changed,
+                require("cthru.utils.cthru").hook_cthru({
+                    force_update = g._cthru_changed,
                     toggle = false,
                 })
             end, opts.match == g.cthru_color and g.cthru_defer_count or 0)
