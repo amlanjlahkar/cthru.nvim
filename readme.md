@@ -29,8 +29,6 @@ vim.g.cthru_groups = vim.list_extend(vim.g.cthru_groups, custom_hl_groups)
 ## Caveats
 - Sometimes other plugins or other parts of the configuration might also utilize the `ColorScheme` event to listen for colorscheme changes and modify the highlight groups of the default colorscheme set by the user. To prevent race conditions in such scenarios, cthru delays calling its main function until a specific timeout period passes. This timeout duration can be adjusted using the `g:cthru_defer_count` variable, which defaults to 300(ms). Consider reducing it (even to 0) if no such parallel events are to occur, or increasing it if some groups are being incorrectly interpreted.
 
- - Some colorschemes offer multiple variants of color profiles for configuration. Cthru depends on the `g:colors_name` variable to distinguish between the current and previously set colorschemes. When switching between color variants offered by the same colorscheme, it may not accurately reflect changes across all highlight groups if the colorscheme doesn't assign a unique name to each variant. This is a minor issue and can be resolved by temporarily switching to a different colorscheme and then returning to the desired variant.
-
 ## Plans
 
 - [ ] Persistent highlight state between restarts
