@@ -1,8 +1,6 @@
 local g = vim.g
-local defaults = require("cthru.defaults")
-local utils = require("cthru.utils")
-
-local usercmd_name = defaults.usrcmd
+local usercmd_name = g._cthru_usrcmd_name
+local default_groups = require("cthru.default_groups")
 
 local M = {}
 
@@ -36,7 +34,7 @@ end
 M.register_usrcmd = function(opts)
     opts = opts or {}
 
-    local hl_groups_iter = vim.iter(defaults.hl_groups)
+    local hl_groups_iter = vim.iter(default_groups)
     local hl_groups = hl_groups_iter:totable()
 
     if opts then
@@ -50,25 +48,10 @@ M.register_usrcmd = function(opts)
         g.cthru_groups = hl_groups
     end
 
-    assert(vim.fn.exists(":" .. usercmd_name) ~= 2)
-
-    --[[
-        Overwrite cthru_cache on startup using a deferred call
-        so that it properly reflects the highlight groups of default colorscheme
-    --]]
-    vim.defer_fn(function()
-        local color_same = require("cthru.utils").cmp_hl_color(defaults.cache_path)
-        if not color_same then
-            local hl = utils.gen_new_map(g.cthru_groups)
-            utils.overwrite_cache(defaults.cache_path, vim.json.encode(hl))
-        end
-        -- Used in ColorScheme event to indentify the default colorscheme
-        g.cthru_color = g.colors_name
-    end, g.cthru_defer_count)
-
     if g._cthru_col_prev == nil then g._cthru_col_changed = true end
+
     vim.api.nvim_create_user_command(usercmd_name, function()
-        require("cthru.utils.cthru").hook_cthru({ force_update = g._cthru_col_changed, toggle = true })
+        require("cthru.cthru").hook_cthru({ toggle = true })
     end, {
         nargs = 0,
         bar = false,
