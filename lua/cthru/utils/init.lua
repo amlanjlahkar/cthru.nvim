@@ -7,7 +7,7 @@ local utils = {}
 ---Generate value to be mapped with `hl_group`
 ---@param hl_group string
 ---@return table
-utils.gen_hlmap_val = function(hl_group)
+utils.gen_map_val = function(hl_group)
     local hl_opt = api.nvim_get_hl(0, { name = hl_group, create = false })
     return { hl_opt = hl_opt, use = false }
 end
@@ -15,10 +15,10 @@ end
 ---Generate new highlight mapping based off of `hl_groups`
 ---@param hl_groups table
 ---@return table
-utils.gen_new_hl_cache = function(hl_groups)
+utils.gen_new_map = function(hl_groups)
     local hl_map = {}
     for _, hlg in pairs(hl_groups) do
-        local value = utils.gen_hlmap_val(hlg)
+        local value = utils.gen_map_val(hlg)
         hl_map[hlg] = value
     end
     return { colorscheme = g.colors_name, hl_map = hl_map }
@@ -26,7 +26,7 @@ end
 
 ---Compare current/provided colorscheme with cached colorscheme
 ---@param cache_path string
----@param color? string Colorscheme to match against, g:colors_name if nil
+---@param color? string Colorscheme to match against, `g:colors_name` if nil
 ---@return boolean #`true` if same, `false` otherwise
 utils.cmp_hl_color = function(cache_path, color)
     assert(type(cache_path) == "string")
@@ -71,7 +71,7 @@ utils.cmp_hlmap = function(hl_groups, hl_map_cached, redefine)
 
     for _, hlg in pairs(hl_groups) do
         if not hl_map_cached[hlg] or redefine then
-            local value = utils.gen_hlmap_val(hlg)
+            local value = utils.gen_map_val(hlg)
             hl_map_cached[hlg] = value
             hl_map[hlg] = vim.deepcopy(value, true)
         end

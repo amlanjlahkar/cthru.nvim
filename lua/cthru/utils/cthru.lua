@@ -4,11 +4,11 @@ local g = vim.g
 
 local M = {}
 
----@class CthruInitOpts
----@field force_update? boolean #Default is false
+---@class CThruOpts
+---@field force_update? boolean #Default is `false`
 ---@field toggle boolean #Toggle cthru state
 
----@param opts CthruInitOpts
+---@param opts CThruOpts
 M.hook_cthru = function(opts)
     assert(type(opts.toggle) == "boolean")
 
@@ -21,7 +21,7 @@ M.hook_cthru = function(opts)
 
     ---@diagnostic disable-next-line: undefined-field
     if not vim.uv.fs_access(cache_path, "R") or force_update then
-        hl = utils.gen_new_hl_cache(hl_groups)
+        hl = utils.gen_new_map(hl_groups)
         write_cache = true
     end
 
@@ -34,6 +34,7 @@ M.hook_cthru = function(opts)
         end
     end
 
+    -- Create a unreferenced copy to perform modifications
     local hl_map_copy = utils.cmp_hlmap(hl_groups, hl.hl_map, force_update)
 
     if opts.toggle then g._cthru = not g._cthru end
@@ -52,11 +53,11 @@ M.hook_cthru = function(opts)
     end
 
     if write_cache or force_update then
-        if force_update then g._cthru_changed = false end
         vim.schedule(function()
             utils.overwrite_cache(cache_path, vim.json.encode(hl))
         end)
     end
+    g._cthru_col_changed = false
 end
 
 return M

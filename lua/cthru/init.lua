@@ -6,13 +6,12 @@ local usercmd_name = defaults.usrcmd
 
 local M = {}
 
----@class CThruOpts
+---@class CThruConf
 ---@field additional_groups table? Additional highlight groups to be included
----@field cache_path string? Cache location
 ---@field excluded_groups table? Highlight groups to be excluded from default list
 
 ---Gateway method for external configuration
----@param opts CThruOpts
+---@param opts CThruConf
 M.configure = function(opts)
     opts = opts or {}
 
@@ -33,7 +32,6 @@ M.configure = function(opts)
     M.register_usrcmd(opts)
 end
 
----Register user command
 ---@param opts table
 M.register_usrcmd = function(opts)
     local hl_groups_iter = vim.iter(defaults.hl_groups)
@@ -59,15 +57,15 @@ M.register_usrcmd = function(opts)
     vim.defer_fn(function()
         local color_same = require("cthru.utils").cmp_hl_color(defaults.cache_path)
         if not color_same then
-            local hl = utils.gen_new_hl_cache(g.cthru_groups)
+            local hl = utils.gen_new_map(g.cthru_groups)
             utils.overwrite_cache(defaults.cache_path, vim.json.encode(hl))
         end
         -- Used in ColorScheme event to indentify the default colorscheme
         g.cthru_color = g.colors_name
-    end, g.cthru_defer_count or 500)
+    end, g.cthru_defer_count)
 
     vim.api.nvim_create_user_command(usercmd_name, function()
-        require("cthru.utils.cthru").hook_cthru({ force_update = g._cthru_changed, toggle = true })
+        require("cthru.utils.cthru").hook_cthru({ force_update = g._cthru_col_changed, toggle = true })
     end, {
         nargs = 0,
         bar = false,
