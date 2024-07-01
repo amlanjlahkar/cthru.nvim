@@ -1,5 +1,5 @@
 local g = vim.g
-local usercmd_name = g._cthru_usrcmd_name
+local usercmd_name = "CthruToggle"
 local default_groups = require("cthru.default_groups")
 
 local M = {}
@@ -24,7 +24,7 @@ M.configure = function(opts)
         end
     end
 
-    -- Delete usercommand set by after/plugin upon calling configure
+    -- Delete usercommand set by plugin/cthru upon calling configure
     pcall(vim.api.nvim_del_user_command, usercmd_name)
 
     M.register_usrcmd(opts)
@@ -48,10 +48,10 @@ M.register_usrcmd = function(opts)
         g.cthru_groups = hl_groups
     end
 
-    if g._cthru_col_prev == nil then g._cthru_col_changed = true end
-
+    local startup = 0
     vim.api.nvim_create_user_command(usercmd_name, function()
-        require("cthru.cthru").hook_cthru({ toggle = true })
+        require("cthru.cthru").hook_cthru({ reset = startup == 0, toggle = true })
+        if startup == 0 then startup = 1 end
     end, {
         nargs = 0,
         bar = false,

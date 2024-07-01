@@ -4,17 +4,20 @@ local set_hl = vim.api.nvim_set_hl
 local M = {}
 
 ---@class CThruOpts
+---@field reset? boolean #Reset global hl_map table. default is `false`
 ---@field toggle boolean #Toggle cthru state
 
 ---@param opts CThruOpts
 M.hook_cthru = function(opts)
     assert(type(opts.toggle) == "boolean")
 
-    HlMap = HlMap or {}
+    local reset = opts.reset or false
 
-    if g._cthru_col_changed then
+    Cthru_hl_map = Cthru_hl_map or {}
+
+    if reset then
         for _, hlg in pairs(g.cthru_groups) do
-            HlMap[hlg] = vim.api.nvim_get_hl(0, { name = hlg })
+            Cthru_hl_map[hlg] = vim.api.nvim_get_hl(0, { name = hlg })
         end
     end
 
@@ -22,13 +25,11 @@ M.hook_cthru = function(opts)
 
     for _, hlg in pairs(g.cthru_groups) do
         if g._cthru then
-            set_hl(0, hlg, vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, HlMap[hlg]))
+            set_hl(0, hlg, vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, Cthru_hl_map[hlg]))
         else
-            set_hl(0, hlg, HlMap[hlg])
+            set_hl(0, hlg, Cthru_hl_map[hlg])
         end
     end
-
-    g._cthru_col_changed = false
 end
 
 return M
