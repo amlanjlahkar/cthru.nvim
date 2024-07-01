@@ -4,7 +4,6 @@ local g = vim.g
 local defaults = require("cthru.defaults")
 
 g._cthru = false
-g._cthru_col_changed = false
 g.cthru_groups = g.cthru_groups or defaults.hl_groups
 g.cthru_defer_count = g.cthru_defer_count or 300
 
@@ -18,7 +17,7 @@ vim.api.nvim_create_autocmd("ColorSchemePre", {
     callback = function(opts)
         local curr_color = opts.match
 
-        g._cthru_col_changed = g._cthru_col_prev ~= nil and g._cthru_col_prev ~= curr_color
+        g._cthru_col_changed = g._cthru_col_prev ~= curr_color
 
         if g._cthru_col_changed then vim.cmd.highlight("clear") end
 
@@ -31,7 +30,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
     group = augroup,
     callback = function(opts)
         --[[
-            Always called if cthru is enabled to recall changes,
+            Always call hook method if cthru is enabled to maintain state,
             particularly on the same colorscheme when switched
         --]]
         if g._cthru then

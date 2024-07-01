@@ -11,7 +11,7 @@ local M = {}
 ---@field excluded_groups table? Highlight groups to be excluded from default list
 
 ---Gateway method for external configuration
----@param opts CThruConf
+---@param opts? CThruConf
 M.configure = function(opts)
     opts = opts or {}
 
@@ -26,14 +26,16 @@ M.configure = function(opts)
         end
     end
 
-    -- Delete usercommand set by default upon calling configure
+    -- Delete usercommand set by after/plugin upon calling configure
     pcall(vim.api.nvim_del_user_command, usercmd_name)
 
     M.register_usrcmd(opts)
 end
 
----@param opts CThruConf
+---@param opts? CThruConf
 M.register_usrcmd = function(opts)
+    opts = opts or {}
+
     local hl_groups_iter = vim.iter(defaults.hl_groups)
     local hl_groups = hl_groups_iter:totable()
 
@@ -64,6 +66,7 @@ M.register_usrcmd = function(opts)
         g.cthru_color = g.colors_name
     end, g.cthru_defer_count)
 
+    if g._cthru_col_prev == nil then g._cthru_col_changed = true end
     vim.api.nvim_create_user_command(usercmd_name, function()
         require("cthru.utils.cthru").hook_cthru({ force_update = g._cthru_col_changed, toggle = true })
     end, {
