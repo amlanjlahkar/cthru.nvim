@@ -1,5 +1,8 @@
 assert(vim.fn.has("nvim-0.10.0") == 1, "cthru: minimum neovim version 0.10.0 required!")
 
+-- Global variable to store highlight group attributes
+Cthru_hl_map = {}
+
 local g = vim.g
 
 g._cthru = false
@@ -11,7 +14,7 @@ require("cthru").register_usrcmd()
 local color_changed = false
 local default_color = nil
 local prev_color = nil
-local hook_cthru = require("cthru.cthru").hook_cthru
+local hook_cthru = require("cthru").hook_cthru
 
 local augroup = vim.api.nvim_create_augroup("_cthru", { clear = true })
 
@@ -33,14 +36,19 @@ vim.api.nvim_create_autocmd("ColorScheme", {
     callback = function(opts)
         if not default_color then default_color = g.colors_name end
 
+        if color_changed then
+            for _, hlg in pairs(g.cthru_groups) do
+                Cthru_hl_map[hlg] = vim.api.nvim_get_hl(0, { name = hlg })
+            end
+        end
+
         if g._cthru then
             -- Defer calling method to ensure custom highlights for default colorscheme are properly applied
             if opts.match == default_color then
-                vim.defer_fn(function()
-                    hook_cthru({ reset = true, toggle = false })
-                end, g.cthru_defer_count)
+                -- stylua: ignore
+                vim.defer_fn(function() hook_cthru(false) end, g.cthru_defer_count)
             else
-                hook_cthru({ reset = true, toggle = false })
+                hook_cthru(false)
             end
         end
 

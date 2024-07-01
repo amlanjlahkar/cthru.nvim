@@ -1,4 +1,5 @@
 local g = vim.g
+local api = vim.api
 local usercmd_name = "CthruToggle"
 local default_groups = require("cthru.default_groups")
 
@@ -25,7 +26,7 @@ M.configure = function(opts)
     end
 
     -- Delete usercommand set by plugin/cthru upon calling configure
-    pcall(vim.api.nvim_del_user_command, usercmd_name)
+    pcall(api.nvim_del_user_command, usercmd_name)
 
     M.register_usrcmd(opts)
 end
@@ -48,16 +49,29 @@ M.register_usrcmd = function(opts)
         g.cthru_groups = hl_groups
     end
 
-    local startup = 0
-    vim.api.nvim_create_user_command(usercmd_name, function()
-        require("cthru.cthru").hook_cthru({ reset = startup == 0, toggle = true })
-        if startup == 0 then startup = 1 end
+    api.nvim_create_user_command(usercmd_name, function()
+        M.hook_cthru()
     end, {
         nargs = 0,
         bar = false,
         bang = false,
         desc = "Toggle background color of highlight groups",
     })
+end
+
+---@param toggle? boolean #Default is `true`
+M.hook_cthru = function(toggle)
+    toggle = (toggle == nil or toggle) and true
+
+    if toggle then g._cthru = not g._cthru end
+
+    for _, hlg in pairs(g.cthru_groups) do
+        if g._cthru then
+            api.nvim_set_hl(0, hlg, vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, Cthru_hl_map[hlg]))
+        else
+            api.nvim_set_hl(0, hlg, Cthru_hl_map[hlg])
+        end
+    end
 end
 
 return M
