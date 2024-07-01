@@ -32,19 +32,19 @@ M.configure = function(opts)
     M.register_usrcmd(opts)
 end
 
----@param opts table
+---@param opts CThruConf
 M.register_usrcmd = function(opts)
     local hl_groups_iter = vim.iter(defaults.hl_groups)
     local hl_groups = hl_groups_iter:totable()
 
     if opts then
-        local exclude = opts["excluded_groups"]
+        local exclude = opts.excluded_groups
         if exclude then
             hl_groups_iter:map(function(hlg)
                 return not vim.list_contains(exclude, hlg) and hlg or nil
             end)
         end
-        vim.list_extend(hl_groups, opts["additional_groups"] or {})
+        vim.list_extend(hl_groups, opts.additional_groups or {})
         g.cthru_groups = hl_groups
     end
 
