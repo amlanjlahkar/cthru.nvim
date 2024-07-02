@@ -1,24 +1,29 @@
 assert(vim.fn.has("nvim-0.10.0") == 1, "cthru: minimum neovim version 0.10.0 required!")
 
--- Global variable to store highlight group attributes
-Cthru_hl_map = {}
-
 local g = vim.g
+local api = vim.api
 
 g._cthru = false
-g.cthru_groups = g.cthru_groups or require("cthru.default_groups")
-g.cthru_defer_count = g.cthru_defer_count or 300
-
-require("cthru").register_usrcmd()
+g.cthru_groups = require("cthru.default_groups")
+g.cthru_defer_count = 100
 
 local color_changed = false
 local default_color = nil
 local prev_color = nil
-local hook_cthru = require("cthru").hook_cthru
+local cthru = require("cthru")
 
-local augroup = vim.api.nvim_create_augroup("_cthru", { clear = true })
+-- Global table to store highlight group attributes
+Cthru_hl_map = {}
 
-vim.api.nvim_create_autocmd("ColorSchemePre", {
+local function reset_hl_map()
+    for _, hlg in pairs(g.cthru_groups) do
+        Cthru_hl_map[hlg] = api.nvim_get_hl(0, { name = hlg })
+    end
+end
+
+local augroup = api.nvim_create_augroup("_cthru", { clear = true })
+
+api.nvim_create_autocmd("ColorSchemePre", {
     desc = "Clear custom highlight groups before setting a colorscheme",
     group = augroup,
     callback = function(opts)
@@ -30,28 +35,28 @@ vim.api.nvim_create_autocmd("ColorSchemePre", {
     end,
 })
 
-vim.api.nvim_create_autocmd("ColorScheme", {
+api.nvim_create_autocmd("ColorScheme", {
     desc = "Maintain cthru state on changing colorschemes",
     group = augroup,
     callback = function(opts)
         if not default_color then default_color = g.colors_name end
 
-        if color_changed then
-            for _, hlg in pairs(g.cthru_groups) do
-                Cthru_hl_map[hlg] = vim.api.nvim_get_hl(0, { name = hlg })
-            end
-        end
+        if vim.v.vim_did_enter > 0 and color_changed then reset_hl_map() end
 
         if g._cthru then
-            -- Defer calling method to ensure custom highlights for default colorscheme are properly applied
             if opts.match == default_color then
                 -- stylua: ignore
-                vim.defer_fn(function() hook_cthru(false) end, g.cthru_defer_count)
+                vim.defer_fn(function() cthru.hook_cthru(false) end, g.cthru_defer_count)
             else
-                hook_cthru(false)
+                cthru.hook_cthru(false)
             end
         end
-
-        color_changed = false
     end,
 })
+
+-- Populate the highlight table at startup
+vim.defer_fn(function()
+    if vim.tbl_isempty(Cthru_hl_map) then reset_hl_map() end
+end, g.cthru_defer_count)
+
+cthru.register_usrcmd()

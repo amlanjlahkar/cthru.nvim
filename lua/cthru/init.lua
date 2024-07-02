@@ -1,7 +1,7 @@
 local g = vim.g
 local api = vim.api
 local usercmd_name = "CthruToggle"
-local default_groups = require("cthru.default_groups")
+local default_groups = g.cthru_groups
 
 local M = {}
 
@@ -36,7 +36,6 @@ M.register_usrcmd = function(opts)
     opts = opts or {}
 
     local hl_groups_iter = vim.iter(default_groups)
-    local hl_groups = hl_groups_iter:totable()
 
     if opts then
         local exclude = opts.excluded_groups
@@ -45,12 +44,18 @@ M.register_usrcmd = function(opts)
                 return not vim.list_contains(exclude, hlg) and hlg or nil
             end)
         end
-        vim.list_extend(hl_groups, opts.additional_groups or {})
-        g.cthru_groups = hl_groups
+        vim.list_extend(default_groups, opts.additional_groups or {})
+        g.cthru_groups = default_groups
+    end
+
+    if vim.tbl_isempty(Cthru_hl_map) then
+        for _, hlg in pairs(g.cthru_groups) do
+            Cthru_hl_map[hlg] = api.nvim_get_hl(0, { name = hlg })
+        end
     end
 
     api.nvim_create_user_command(usercmd_name, function()
-        M.hook_cthru()
+        M.hook_cthru(true)
     end, {
         nargs = 0,
         bar = false,
@@ -59,17 +64,17 @@ M.register_usrcmd = function(opts)
     })
 end
 
----@param toggle? boolean #Default is `true`
+---@param toggle boolean Toggle cthru state
 M.hook_cthru = function(toggle)
-    toggle = (toggle == nil or toggle) and true
+    assert(type(_G["Cthru_hl_map"]) == "table" and type(toggle) == "boolean")
 
     if toggle then g._cthru = not g._cthru end
 
-    for _, hlg in pairs(g.cthru_groups) do
+    for hlg, attr in pairs(Cthru_hl_map) do
         if g._cthru then
-            api.nvim_set_hl(0, hlg, vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, Cthru_hl_map[hlg]))
+            api.nvim_set_hl(0, hlg, vim.tbl_extend("keep", { bg = "NONE", ctermbg = "NONE" }, attr))
         else
-            api.nvim_set_hl(0, hlg, Cthru_hl_map[hlg])
+            api.nvim_set_hl(0, hlg, attr)
         end
     end
 end
