@@ -1,8 +1,4 @@
-Cthru provides a global `:CthruToggle` user command which can be used to toggle the background color property of [certain](lua/cthru/default_groups.lua) highlight groups.
-
-![screenshot](assets/cthru_screenshot.png)
-
----
+Cthru provides a global **"CthruToggle"** user command that toggles the background color property of [certain](lua/cthru/default_groups.lua) highlight groups.
 
 ## Installation and usage
 
@@ -11,8 +7,8 @@ Cthru provides a global `:CthruToggle` user command which can be used to toggle 
 
 Install as any other normal plugin.
 
-In order to register the `CthruToggle` user command the `configure` method exposed by the `cthru` module is needed to be called.
-Optionally a table can be passed to the method to alter the default behavior of Cthru. The available options are:
+In order to register the user command the `configure` method exposed by the `cthru` module is needed to be called.
+Optionally a table can be passed to the method to alter the plugin's default behavior. The available options are:
 
 ```lua
 require("cthru").configure({
@@ -36,7 +32,7 @@ end
 
 - Although it is possible to lazyload Cthru, e.g., on the "CthruToggle" command, I do not recommend doing so; primarily because of three reasons:
     - `remember_state = true` only works when Cthru is allowed to load at startup
-    - Incorrect identification of default color set by the user, the significance of which is described in the previous point(this can be solved by introducing another variable/option but I don't think any more changes to the codebase, solely because of this, isn't worth it, see next point)
+    - Incorrect identification of default color set by the user, the significance of which is described in the previous point(this can be solved by introducing another variable/option but I don't think any more changes to the codebase, solely because of this, is worth it, see next point)
     - Cthru takes almost negligible amount of time to load(~1ms)
 
 ## Plans
