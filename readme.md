@@ -26,8 +26,10 @@ require("cthru").configure({
 Additionaly the global variable `g:cthru_groups` can also be used to extend the default list without needing to call `configure`.
 
 ```lua
-local custom_hl_groups = {} -- append extra groups
-vim.g.cthru_groups = vim.list_extend(vim.g.cthru_groups, custom_hl_groups)
+if package.loaded["cthru"] then
+    local custom_hl_groups = {} -- append extra groups
+    vim.g.cthru_groups = vim.list_extend(vim.g.cthru_groups, custom_hl_groups)
+end
 ```
 
 ## Caveats
