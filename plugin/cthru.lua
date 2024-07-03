@@ -5,21 +5,12 @@ local api = vim.api
 
 g._cthru = false
 g.cthru_groups = require("cthru.default_groups")
-g.cthru_defer_count = 100
+g.cthru_defer_count = 10
 
 local color_changed = false
 local default_color = nil
 local prev_color = nil
 local cthru = require("cthru")
-
--- Global table to store highlight group attributes
-Cthru_hl_map = {}
-
-local function reset_hl_map()
-    for _, hlg in pairs(g.cthru_groups) do
-        Cthru_hl_map[hlg] = api.nvim_get_hl(0, { name = hlg })
-    end
-end
 
 local augroup = api.nvim_create_augroup("_cthru", { clear = true })
 
@@ -39,12 +30,14 @@ api.nvim_create_autocmd("ColorScheme", {
     desc = "Maintain cthru state on changing colorschemes",
     group = augroup,
     callback = function(opts)
+        local ui_loaded = vim.v.vim_did_enter > 0
+
         if not default_color then default_color = g.colors_name end
 
-        if vim.v.vim_did_enter > 0 and color_changed then reset_hl_map() end
+        if ui_loaded and color_changed then cthru.reset_hl_map() end
 
-        if g._cthru then
-            if opts.match == default_color then
+        if ui_loaded and g._cthru then
+            if opts.match == "boo" then
                 -- stylua: ignore
                 vim.defer_fn(function() cthru.hook_cthru(false) end, g.cthru_defer_count)
             else
@@ -53,10 +46,5 @@ api.nvim_create_autocmd("ColorScheme", {
         end
     end,
 })
-
--- Populate the highlight table at startup
-vim.defer_fn(function()
-    if vim.tbl_isempty(Cthru_hl_map) then reset_hl_map() end
-end, g.cthru_defer_count)
 
 cthru.register_usrcmd()
