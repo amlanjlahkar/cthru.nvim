@@ -1,6 +1,6 @@
-Cthru exposes a global `:CthruToggle` user command which can be used to toggle the background color property of [certain](lua/cthru/defaults.lua#L4) highlight groups.
+Cthru provides a global `:CthruToggle` user command which can be used to toggle the background color property of [certain](lua/cthru/default_groups.lua) highlight groups.
 
-![demo](assets/cthru_demo.gif)
+![screenshot](assets/cthru_screenshot.png)
 
 ---
 
@@ -11,19 +11,18 @@ Cthru exposes a global `:CthruToggle` user command which can be used to toggle t
 
 Install as any other normal plugin.
 
-An optional `configure` method can be used for altering the default behavior. The available options are:
+In order to register the `CthruToggle` user command the `configure` method exposed by the `cthru` module is needed to be called.
+Optionally a table can be passed to the method to alter the default behavior of Cthru. The available options are:
 
 ```lua
 require("cthru").configure({
-    excluded_groups = {}, -- table? highlight groups to be excluded from default list
-    additional_groups = {}, -- table? additional highlight groups to be included
-    remember_state = nil, -- boolean? remember previous cthru state(unset by default)
+    excluded_groups = {}, -- table? Highlight groups to be excluded from default list
+    additional_groups = {}, -- table? Additional highlight groups to be included
+    remember_state = ???, -- boolean? Remember previous cthru state. Default is `true`
 })
 ```
-> [!NOTE]
-> Avoid lazyloading cthru if `remember_state` is set to `true`
 
-Additionaly the global variable `g:cthru_groups` can also be used to extend the default list without needing to call `configure`.
+Additionally the global variable `g:cthru_groups` can also be used to extend the default list of highlight groups.
 
 ```lua
 if package.loaded["cthru"] then
@@ -34,6 +33,11 @@ end
 
 ## Caveats
 - Sometimes other plugins or other parts of the configuration might also utilize the `ColorScheme` event to listen for colorscheme changes and modify the highlight groups of the default colorscheme set by the user. To prevent race conditions in such scenarios, cthru delays calling its main function until a specific timeout period passes. This timeout duration can be adjusted using the `g:cthru_defer_count` variable, which defaults to 10(ms). Consider reducing it or set to 0 if no such parallel events are to occur, or increasing it if some groups are being incorrectly interpreted.
+
+- Although it is possible to lazyload Cthru, e.g., on the "CthruToggle" command, I do not recommend doing so; primarily because of three reasons:
+    - `remember_state = true` only works when Cthru is allowed to load at startup
+    - Incorrect identification of default color set by the user, the significance of which is described in the previous point(this can be solved by introducing another variable/option but I don't think any more changes to the codebase, solely because of this, isn't worth it, see next point)
+    - Cthru takes almost negligible amount of time to load(~1ms)
 
 ## Plans
 
