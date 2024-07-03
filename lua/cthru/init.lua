@@ -25,12 +25,12 @@ end
 ---@class CThruConf
 ---@field additional_groups table? Additional highlight groups to be included
 ---@field excluded_groups table? Highlight groups to be excluded from default list
----@field remember_state boolean? Remember previous cthru state
+---@field remember_state boolean? Remember previous cthru state. Default is `true`
 
 ---Gateway method for external configuration
 ---@param opts? CThruConf
 M.configure = function(opts)
-    opts = opts or {}
+    opts = vim.tbl_extend("keep", opts or {}, { remember_state = true })
 
     if opts then
         local valid_arg_types = {
@@ -42,12 +42,6 @@ M.configure = function(opts)
             assert(valid_arg_types[key], "cthru: invalid key received inside setup call: " .. key)
             vim.validate({ [key] = { value, { valid_arg_types[key] }, true } })
         end
-    end
-
-    -- Empty the highlight table and delete usercommand set by plugin/cthru upon calling configure
-    if vim.fn.exists(":" .. usrcmd_name) == 2 then
-        api.nvim_del_user_command(usrcmd_name)
-        Cthru_hl_map = {}
     end
 
     M.register_usrcmd(opts)
