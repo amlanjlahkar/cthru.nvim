@@ -39,7 +39,7 @@ M.configure = function(opts)
             remember_state = "boolean",
         }
         for key, value in pairs(opts) do
-            assert(valid_arg_types[key], "cthru: invalid key received inside setup call: " .. key)
+            assert(valid_arg_types[key], "cthru: invalid option received inside configure table: " .. key)
             vim.validate({ [key] = { value, { valid_arg_types[key] }, true } })
         end
     end
